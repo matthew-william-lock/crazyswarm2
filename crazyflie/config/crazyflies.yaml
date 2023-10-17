@@ -1,6 +1,6 @@
 # named list of all robots
 robots:
-  cf231:
+  cf1:
     enabled: true
     uri: radio://0/80/2M/E7E7E7E7E7
     initial_position: [0, 0, 0]
@@ -76,10 +76,12 @@ all:
     default_topics:
      # remove to disable default topic
       pose:
-        frequency: 10 # Hz
-    #custom_topics:
+        frequency: 100 # Hz
+    # custom_topics:
     #  topic_name1:
     #    frequency: 10 # Hz
+    #    vars: ["baro.temp","pm.vbat"]
+
     #    vars: ["stateEstimateZ.x", "stateEstimateZ.y", "stateEstimateZ.z", "pm.vbat"]
     #  topic_name2:
     #    frequency: 1 # Hz
@@ -91,7 +93,7 @@ all:
       enHighLevel: 1
     stabilizer:
       estimator: 2 # 1: complementary, 2: kalman
-      controller: 2 # 1: PID, 2: mellinger
+      controller: 1 # 1: PID, 2: mellinger
     # ring:
     #   effect: 16 # 6: double spinner, 7: solid color, 16: packetRate
     #   solidBlue: 255 # if set to solid color
