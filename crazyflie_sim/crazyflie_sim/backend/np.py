@@ -5,6 +5,8 @@ from rosgraph_msgs.msg import Clock
 from rclpy.time import Time
 from ..sim_data_types import State, Action
 
+from rclpy.node import Node
+from nav_msgs.msg import Odometry
 
 import numpy as np
 import rowan
@@ -12,17 +14,23 @@ import rowan
 class Backend:
     """Backend that uses newton-euler rigid-body dynamics implemented in numpy"""
 
-    def __init__(self, node: Node, names: list[str], states: list[State]):
+    def __init__(self, node: Node, names: list[str], states: list[State], odom_rate: int = 100):
         self.node = node
         self.names = names
         self.clock_publisher = node.create_publisher(Clock, 'clock', 10)
         self.t = 0
-        self.dt = 0.0005
+        self.i = 0
+        self.dt = 0.0005 # 2000 Hz  
+        self.odom_rate = 100 # 100 Hz
 
         self.uavs = []
         for state in states:
             uav = Quadrotor(state)
             self.uavs.append(uav)
+            
+        self.auv_odom_publishers =[]
+        for name in self.names:
+            self.auv_odom_publishers.append(node.create_publisher(Odometry, name + '/odom', 1))
 
     def time(self) -> float:
         return self.t
@@ -30,10 +38,13 @@ class Backend:
     def step(self, states_desired: list[State], actions: list[Action]) -> list[State]:
         # advance the time
         self.t += self.dt
+        self.i += 1
 
         next_states = []
 
         for uav, action in zip(self.uavs, actions):
+            
+            assert isinstance(uav, Quadrotor)
             uav.step(action, self.dt)
             next_states.append(uav.state)
 
@@ -42,11 +53,36 @@ class Backend:
         clock_message = Clock()
         clock_message.clock = Time(seconds=self.time()).to_msg()
         self.clock_publisher.publish(clock_message)
+        
+        # publish the current odometry
+        if self.i % (int(1/self.dt) // self.odom_rate) == 0:
+            self.publish_odom(next_states)
 
         return next_states
 
     def shutdown(self):
         pass
+    
+    def publish_odom(self, states: list[State]):
+        for state, publisher in zip(states, self.auv_odom_publishers):
+            odom = Odometry()
+            odom.header.stamp = self.node.get_clock().now().to_msg()
+            odom.header.frame_id = 'world'
+            odom.child_frame_id = 'base_link'
+            odom.pose.pose.position.x = state.pos[0]
+            odom.pose.pose.position.y = state.pos[1]
+            odom.pose.pose.position.z = state.pos[2]
+            odom.pose.pose.orientation.x = state.quat[0]
+            odom.pose.pose.orientation.y = state.quat[1]
+            odom.pose.pose.orientation.z = state.quat[2]
+            odom.pose.pose.orientation.w = state.quat[3]
+            odom.twist.twist.linear.x = state.vel[0]
+            odom.twist.twist.linear.y = state.vel[1]
+            odom.twist.twist.linear.z = state.vel[2]
+            odom.twist.twist.angular.x = state.omega[0]
+            odom.twist.twist.angular.y = state.omega[1]
+            odom.twist.twist.angular.z = state.omega[2]
+            publisher.publish(odom)
 
 
 class Quadrotor:
