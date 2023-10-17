@@ -162,6 +162,21 @@ class CrazyflieSIL:
     #     # high-level commands. This tells it to stop doing that. We don't
     #     # simulate this behavior.
     #     pass
+    
+    def cmdVel(self, roll, pitch, yawrate, thrust):
+        self.mode = CrazyflieSIL.MODE_LOW_VELOCITY
+        self.setpoint.attitude.roll     = np.degrees(roll)
+        self.setpoint.attitude.pitch    = np.degrees(pitch)
+        self.setpoint.attitudeRate.yaw  = np.degrees(yawrate)
+        self.setpoint.thrust            = thrust
+        
+        self.setpoint.mode.x        = firm.modeDisable
+        self.setpoint.mode.y        = firm.modeDisable
+        self.setpoint.mode.z        = firm.modeDisable
+        self.setpoint.mode.roll     = firm.modeAbs
+        self.setpoint.mode.pitch    = firm.modeAbs
+        self.setpoint.mode.yaw      = firm.modeVelocity
+        self.setpoint.mode.quat     = firm.modeDisable
 
     def cmdFullState(self, pos, vel, acc, yaw, omega):
         self.mode = CrazyflieSIL.MODE_LOW_FULLSTATE
@@ -281,7 +296,7 @@ class CrazyflieSIL:
         if self.controller is None:
             return None
 
-        if self.mode != CrazyflieSIL.MODE_HIGH_POLY:
+        if self.mode == CrazyflieSIL.MODE_IDLE:
             return sim_data_types.Action([0,0,0,0])
 
         time_in_seconds = self.time_func()
