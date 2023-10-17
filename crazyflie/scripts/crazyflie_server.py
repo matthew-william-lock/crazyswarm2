@@ -24,8 +24,11 @@ from cflib.crazyflie.log import LogConfig
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging, AddLogging
 from crazyflie_interfaces.srv import UploadTrajectory, StartTrajectory, NotifySetpointsStop
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
+
 from crazyflie_interfaces.msg import Hover
+from crazyflie_interfaces.msg import FullState
 from crazyflie_interfaces.msg import LogDataGeneric
+
 from motion_capture_tracking_interfaces.msg import NamedPoseArray
 
 from std_srvs.srv import Empty
@@ -39,6 +42,8 @@ from tf2_ros import TransformBroadcaster
 
 from functools import partial
 from math import degrees, radians, pi, isnan
+import rowan
+
 
 cf_log_to_ros_param = {
     "uint8_t": ParameterType.PARAMETER_INTEGER,
@@ -245,6 +250,10 @@ class CrazyflieServer(Node):
             self.create_subscription(
                 Hover, name +
                 "/cmd_hover", partial(self._cmd_hover_changed, uri=uri), 10
+            )
+            self.create_subscription(
+                FullState, name +
+                "/cmd_full_state", partial(self._cmd_full_state_changed, name=name), 10
             )
             qos_profile = QoSProfile(reliability =QoSReliabilityPolicy.BEST_EFFORT,
                 history=QoSHistoryPolicy.KEEP_LAST,
@@ -833,6 +842,19 @@ class CrazyflieServer(Node):
         thrust = int(min(max(msg.linear.z, 0, 0), 60000))
         self.swarm._cfs[uri].cf.commander.send_setpoint(
             roll, pitch, yawrate, thrust)
+        
+    def _cmd_full_state_changed(self, msg, name):
+        q = [msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z]
+        rpy = rowan.to_euler(q)
+        
+        crazyflie = self.swarm._cfs[name]
+
+        crazyflie.cmdFullState(
+            [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z],
+            [msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z],
+            [msg.acc.x, msg.acc.y, msg.acc.z],
+            rpy[2],
+            [msg.twist.angular.x, msg.twist.angular.y, msg.twist.angular.z])
 
     def _cmd_hover_changed(self, msg, uri=""):
         """
