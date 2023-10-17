@@ -281,12 +281,24 @@ class CrazyflieServer(Node):
 
         return response
 
-    def _cmd_vel_legacy_changed(self, msg, name=""):
+    def _cmd_vel_legacy_changed(self, msg : Twist, name=""):
         """
         Topic update callback to control the attitude and thrust
             of the crazyflie with teleop
         """
-        self.get_logger().info("cmd_vel_legacy not yet implemented")
+        # self.get_logger().info("cmd_vel_legacy not yet implemented")
+        
+        roll = msg.linear.y
+        pitch = -msg.linear.x
+        yawrate = msg.angular.z
+        thrust = int(min(max(msg.linear.z, 0, 0), 65535))
+        
+        crazyflie = self.cfs[name]
+        assert isinstance(crazyflie, CrazyflieSIL)
+        
+        # print("cmd_vel_legacy", roll, pitch, yawrate, thrust)
+        
+        crazyflie.cmdVel(roll, pitch, yawrate, thrust)
 
 
     def _cmd_hover_changed(self, msg, name=""):
