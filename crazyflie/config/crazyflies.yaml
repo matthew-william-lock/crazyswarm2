@@ -1,8 +1,8 @@
 # named list of all robots
 robots:
-  cf231:
+  cf1:
     enabled: true
-    uri: radio://0/80/2M/E7E7E7E7E7
+    uri: radio://0/80/2M/E7E7E7E7E6
     initial_position: [0, 0, 0]
     type: cf21  # see robot_types
     # firmware_params:
@@ -72,14 +72,25 @@ all:
   # firmware logging for all drones (use robot_types/type_name to set per type, or
   # robots/drone_name to set per drone)
   firmware_logging:
-    enabled: false
+    enabled: true
     default_topics:
      # remove to disable default topic
       pose:
-        frequency: 10 # Hz
-    #custom_topics:
-    #  topic_name1:
-    #    frequency: 10 # Hz
+        frequency: 80 # Hz
+    custom_topics:
+     velocity:
+       frequency: 80 # Hz
+       vars: ["stateEstimate.vx","stateEstimate.vy","stateEstimate.vz"]
+     accel_z:
+       frequency: 80 # Hz
+       vars: ["stateEstimateZ.az"]
+    #  angular_velocity:
+    #    frequency: 100 # Hz
+    #    vars: ["stateEstimateZ.ratePitch","stateEstimateZ.rateRoll","stateEstimateZ.rateYaw"]
+    #  body_velocity:
+    #    frequency: 100 # Hz
+    #    vars: ["kalman.statePX","kalman.statePY","kalman.statePZ"]
+
     #    vars: ["stateEstimateZ.x", "stateEstimateZ.y", "stateEstimateZ.z", "pm.vbat"]
     #  topic_name2:
     #    frequency: 1 # Hz
@@ -91,7 +102,7 @@ all:
       enHighLevel: 1
     stabilizer:
       estimator: 2 # 1: complementary, 2: kalman
-      controller: 2 # 1: PID, 2: mellinger
+      controller: 1 # 1: PID, 2: mellinger
     # ring:
     #   effect: 16 # 6: double spinner, 7: solid color, 16: packetRate
     #   solidBlue: 255 # if set to solid color
