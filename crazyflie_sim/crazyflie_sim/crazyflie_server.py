@@ -154,6 +154,7 @@ class CrazyflieServer(Node):
 
         # update the resulting state
         for state, (_, cf) in zip(states_next, self.cfs.items()):
+            assert isinstance(cf, CrazyflieSIL)
             cf.setState(state)
 
         for vis in self.visualizations:
@@ -193,6 +194,7 @@ class CrazyflieServer(Node):
         )
         cfs = self.cfs if name == "all" else {name: self.cfs[name]}
         for _, cf in cfs.items():
+            assert isinstance(cf, CrazyflieSIL)            
             cf.takeoff(request.height, duration, request.group_mask)
 
         return response
@@ -281,12 +283,24 @@ class CrazyflieServer(Node):
 
         return response
 
-    def _cmd_vel_legacy_changed(self, msg, name=""):
+    def _cmd_vel_legacy_changed(self, msg : Twist, name=""):
         """
         Topic update callback to control the attitude and thrust
             of the crazyflie with teleop
         """
-        self.get_logger().info("cmd_vel_legacy not yet implemented")
+        # self.get_logger().info("cmd_vel_legacy not yet implemented")
+        
+        roll = msg.linear.y
+        pitch = -msg.linear.x
+        yawrate = msg.angular.z
+        thrust = int(min(max(msg.linear.z, 0, 0), 65535))
+        
+        crazyflie = self.cfs[name]
+        assert isinstance(crazyflie, CrazyflieSIL)
+        
+        # print("cmd_vel_legacy", roll, pitch, yawrate, thrust)
+        
+        crazyflie.cmdVel(roll, pitch, yawrate, thrust)
 
 
     def _cmd_hover_changed(self, msg, name=""):
@@ -299,8 +313,11 @@ class CrazyflieServer(Node):
     def _cmd_full_state_changed(self, msg, name):
         q = [msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z]
         rpy = rowan.to_euler(q)
+        
+        crazyflie = self.cfs[name]
+        assert isinstance(crazyflie, CrazyflieSIL)
 
-        self.cfs[name].cmdFullState(
+        crazyflie.cmdFullState(
             [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z],
             [msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z],
             [msg.acc.x, msg.acc.y, msg.acc.z],

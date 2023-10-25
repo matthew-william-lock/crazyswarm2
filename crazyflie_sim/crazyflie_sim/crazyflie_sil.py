@@ -162,6 +162,21 @@ class CrazyflieSIL:
     #     # high-level commands. This tells it to stop doing that. We don't
     #     # simulate this behavior.
     #     pass
+    
+    def cmdVel(self, roll, pitch, yawrate, thrust):
+        self.mode = CrazyflieSIL.MODE_LOW_VELOCITY
+        self.setpoint.attitude.roll     = np.degrees(roll)
+        self.setpoint.attitude.pitch    = np.degrees(pitch)
+        self.setpoint.attitudeRate.yaw  = np.degrees(yawrate)
+        self.setpoint.thrust            = thrust
+        
+        self.setpoint.mode.x        = firm.modeDisable
+        self.setpoint.mode.y        = firm.modeDisable
+        self.setpoint.mode.z        = firm.modeDisable
+        self.setpoint.mode.roll     = firm.modeAbs
+        self.setpoint.mode.pitch    = firm.modeAbs
+        self.setpoint.mode.yaw      = firm.modeVelocity
+        self.setpoint.mode.quat     = firm.modeDisable
 
     def cmdFullState(self, pos, vel, acc, yaw, omega):
         self.mode = CrazyflieSIL.MODE_LOW_FULLSTATE
@@ -205,7 +220,7 @@ class CrazyflieSIL:
     # def cmdStop(self):
     #     # TODO: set mode to MODE_IDLE?
     #     pass
-
+    
     def getSetpoint(self):
         if self.mode == CrazyflieSIL.MODE_HIGH_POLY:
             # See logic in crtp_commander_high_level.c
@@ -281,8 +296,11 @@ class CrazyflieSIL:
         if self.controller is None:
             return None
 
-        if self.mode != CrazyflieSIL.MODE_HIGH_POLY:
-            return sim_data_types.Action([0,0,0,0])
+        # if self.mode != CrazyflieSIL.MODE_HIGH_POLY:
+        #     print(f"Controller not supported in mode {self.mode}")
+        #     return sim_data_types.Action([0,0,0,0])
+        
+        # print(f"Controlle mode: {self.mode}")
 
         time_in_seconds = self.time_func()
         # ticks is essentially the time in milliseconds as an integer
