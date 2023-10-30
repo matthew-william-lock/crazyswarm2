@@ -5,7 +5,7 @@
       motion_capture:
         warning_if_rate_outside: [80.0, 120.0]
     firmware_params:
-      query_all_values_on_connect: False
+      query_all_values_on_connect: True
     # simulation related
     sim:
       max_dt: 0 #0.1              # artificially limit the step() function (set to 0 to disable)
@@ -34,4 +34,4 @@
               calibration:
                 tvec: [0,0,0]
                 rvec: [ 0.61394313, -0.61394313,  1.48218982]   # 45 deg tilt
-      controller: mellinger # none, pid, mellinger
+      controller: pid # none, pid, mellinger

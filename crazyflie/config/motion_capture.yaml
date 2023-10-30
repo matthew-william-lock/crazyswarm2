@@ -1,15 +1,24 @@
 /motion_capture_tracking:
   ros__parameters:
-    type: "optitrack"
-    hostname: "130.149.82.37"
+    type: "optitrack_closed_source"
+    hostname: "192.168.0.101"
 
-    mode: "libobjecttracker" # one of motionCapture,libRigidBodyTracker
+    mode: "motionCapture" # one of motionCapture,libRigidBodyTracker
 
     topics:
       poses:
         qos:
           mode: "sensor"
           deadline: 100.0 # Hz
+
+    # rigid_bodies:
+    #   '1':  # Set to the Rigid Body Streaming ID seen in Motive
+    #       pose: Human/pose
+    #       pose2d: Human/ground_pose
+    #       odom: Human/Odom
+    #       tf: tf
+    #       child_frame_id: Human/base_link
+    #       parent_frame_id: odom
 
     marker_configurations:
       default: # for standard Crazyflie

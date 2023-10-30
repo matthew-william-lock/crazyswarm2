@@ -5,6 +5,7 @@ robots:
     uri: radio://0/80/2M/E7E7E7E7E6
     initial_position: [0, 0, 0]
     type: cf21  # see robot_types
+    id: 1
     # firmware_params:
     #   kalman:
     #     pNAcc_xy: 1.0 # default 0.5
@@ -14,11 +15,11 @@ robots:
     #     topic_name3: 
     #       frequency: 1
     #       vars: ["acc.x", "acc.y"]
-  cf5:
-    enabled: false
-    uri: radio://0/80/2M/E7E7E7E705
-    initial_position: [0, -0.5, 0]
-    type: cf21  # see robot_types
+  # cf5:
+  #   enabled: false
+  #   uri: radio://0/80/2M/E7E7E7E705
+  #   initial_position: [0, -0.5, 0]
+  #   type: cf21  # see robot_types
     # firmware_params:
     #   kalman:
     #     pNAcc_xy: 1.0 # default 0.5
@@ -31,9 +32,9 @@ robots:
 robot_types:
   cf21:
     motion_capture:
-      enabled: true
+      enabled: false
       # only if enabled; see motion_capture.yaml
-      marker: default_single_marker
+      marker: mocap_deck
       dynamics: default
     big_quad: false
     battery:
@@ -80,7 +81,7 @@ all:
     custom_topics:
      velocity:
        frequency: 80 # Hz
-       vars: ["stateEstimate.vx","stateEstimate.vy","stateEstimate.vz"]
+       vars: ["stateEstimate.vx","stateEstimate.vy","stateEstimate.vz"] # Global reference frame
      accel_z:
        frequency: 80 # Hz
        vars: ["stateEstimateZ.az"]

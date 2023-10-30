@@ -70,25 +70,25 @@ def generate_launch_description():
             output='screen',
             parameters=[motion_capture_params]
         ),
-        Node(
-            package='crazyflie',
-            executable='teleop',
-            name='teleop',
-            remappings=[
-                ('emergency', 'all/emergency'),
-                ('takeoff', 'cf6/takeoff'),
-                ('land', 'cf6/land'),
-                ('cmd_vel_legacy', 'cf6/cmd_vel_legacy'),
-                ('cmd_full_state', 'cf6/cmd_full_state'),
-                ('notify_setpoints_stop', 'cf6/notify_setpoints_stop'),
-            ],
-            parameters=[teleop_params]
-        ),
-        Node(
-            package='joy',
-            executable='joy_node',
-            name='joy_node' # by default id=0
-        ),
+        # Node(
+        #     package='crazyflie',
+        #     executable='teleop',
+        #     name='teleop',
+        #     remappings=[
+        #         ('emergency', 'all/emergency'),
+        #         ('takeoff', 'cf6/takeoff'),
+        #         ('land', 'cf6/land'),
+        #         ('cmd_vel_legacy', 'cf6/cmd_vel_legacy'),
+        #         ('cmd_full_state', 'cf6/cmd_full_state'),
+        #         ('notify_setpoints_stop', 'cf6/notify_setpoints_stop'),
+        #     ],
+        #     parameters=[teleop_params]
+        # ),
+        # Node(
+        #     package='joy',
+        #     executable='joy_node',
+        #     name='joy_node' # by default id=0
+        # ),
         Node(
             package='crazyflie',
             executable='crazyflie_server.py',
