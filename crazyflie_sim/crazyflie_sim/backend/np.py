@@ -7,9 +7,14 @@ from ..sim_data_types import State, Action
 
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped
 
 import numpy as np
 import rowan
+
+from rclpy.publisher import Publisher
+
+from crazyflie_interfaces.msg import LogDataGeneric
 
 class Backend:
     """Backend that uses newton-euler rigid-body dynamics implemented in numpy"""
@@ -28,9 +33,13 @@ class Backend:
             uav = Quadrotor(state)
             self.uavs.append(uav)
             
-        self.auv_odom_publishers =[]
+        # self.auv_odom_publishers =[]
+        self.auv_pose_publishers = []
+        self.auv_velocity_publishers = []
         for name in self.names:
-            self.auv_odom_publishers.append(node.create_publisher(Odometry, name + '/odom', 1))
+            # self.auv_odom_publishers.append(node.create_publisher(Odometry, name + '/odom', 1))
+            self.auv_pose_publishers.append(node.create_publisher(PoseStamped, name + '/pose', 1))
+            self.auv_velocity_publishers.append(node.create_publisher(LogDataGeneric,name + '/velocity', 1))
 
     def time(self) -> float:
         return self.t
@@ -56,12 +65,40 @@ class Backend:
         
         # publish the current odometry
         if self.i % (int(1/self.dt) // self.odom_rate) == 0:
-            self.publish_odom(next_states)
+            # self.publish_odom(next_states)
+            self.publish_pose(next_states)
+            self.publish_velocities(next_states)
 
         return next_states
 
     def shutdown(self):
         pass
+
+    def publish_velocities(self, states: list[State]):
+        for state, publisher in zip(states, self.auv_velocity_publishers):  
+            assert isinstance(state, State)
+            assert isinstance(publisher, Publisher)
+            velocity = LogDataGeneric()
+            velocity.values.append(state.vel[0])      
+            velocity.values.append(state.vel[1])      
+            velocity.values.append(state.vel[2])      
+            publisher.publish(velocity)
+
+    def publish_pose(self, states: list[State]):
+        for state, publisher in zip(states, self.auv_pose_publishers):
+            assert isinstance(state, State)
+            assert isinstance(publisher, Publisher)
+            pose = PoseStamped()
+            pose.header.stamp = self.node.get_clock().now().to_msg()
+            pose.header.frame_id = 'world'
+            pose.pose.position.x = state.pos[0]
+            pose.pose.position.y = state.pos[1]
+            pose.pose.position.z = state.pos[2]
+            pose.pose.orientation.x = state.quat[0]
+            pose.pose.orientation.y = state.quat[1]
+            pose.pose.orientation.z = state.quat[2]
+            pose.pose.orientation.w = state.quat[3]
+            publisher.publish(pose)
     
     def publish_odom(self, states: list[State]):
         for state, publisher in zip(states, self.auv_odom_publishers):
