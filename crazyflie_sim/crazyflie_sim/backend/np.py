@@ -85,40 +85,25 @@ class Backend:
 
     def publish_pose(self, states: list[State]):
         for state, publisher in zip(states, self.auv_pose_publishers):
+            
             assert isinstance(state, State)
             assert isinstance(publisher, Publisher)
+            
             pose = PoseStamped()
             pose.header.stamp = self.node.get_clock().now().to_msg()
+            
             pose.header.frame_id = 'world'
+            
             pose.pose.position.x = state.pos[0]
             pose.pose.position.y = state.pos[1]
             pose.pose.position.z = state.pos[2]
-            pose.pose.orientation.x = state.quat[0]
-            pose.pose.orientation.y = state.quat[1]
-            pose.pose.orientation.z = state.quat[2]
-            pose.pose.orientation.w = state.quat[3]
+
+            pose.pose.orientation.w = state.quat[0]
+            pose.pose.orientation.x = state.quat[1]
+            pose.pose.orientation.y = state.quat[2]
+            pose.pose.orientation.z = state.quat[3]
+            
             publisher.publish(pose)
-    
-    def publish_odom(self, states: list[State]):
-        for state, publisher in zip(states, self.auv_odom_publishers):
-            odom = Odometry()
-            odom.header.stamp = self.node.get_clock().now().to_msg()
-            odom.header.frame_id = 'world'
-            odom.child_frame_id = 'base_link'
-            odom.pose.pose.position.x = state.pos[0]
-            odom.pose.pose.position.y = state.pos[1]
-            odom.pose.pose.position.z = state.pos[2]
-            odom.pose.pose.orientation.x = state.quat[0]
-            odom.pose.pose.orientation.y = state.quat[1]
-            odom.pose.pose.orientation.z = state.quat[2]
-            odom.pose.pose.orientation.w = state.quat[3]
-            odom.twist.twist.linear.x = state.vel[0]
-            odom.twist.twist.linear.y = state.vel[1]
-            odom.twist.twist.linear.z = state.vel[2]
-            odom.twist.twist.angular.x = state.omega[0]
-            odom.twist.twist.angular.y = state.omega[1]
-            odom.twist.twist.angular.z = state.omega[2]
-            publisher.publish(odom)
 
 
 class Quadrotor:
