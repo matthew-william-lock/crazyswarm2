@@ -248,6 +248,10 @@ class CrazyflieServer(Node):
                 "/cmd_vel_legacy", partial(self._cmd_vel_legacy_changed, uri=uri), 10
             )
             self.create_subscription(
+                Twist, name +
+                "/cmd_vel_z_distance", partial(self._cmd_vel_z_distance_changed, uri=uri), 10
+            )
+            self.create_subscription(
                 VelocityWorld, name +
                 '/cmd_velocity_world', partial(self._cmd_velocity_world_changed, uri=uri), 10
             )
@@ -846,6 +850,22 @@ class CrazyflieServer(Node):
         thrust = int(min(max(msg.linear.z, 0, 0), 65535))
         self.swarm._cfs[uri].cf.commander.send_setpoint(
             roll, pitch, yawrate, thrust)
+        
+    def _cmd_vel_z_distance_changed(self, msg, uri=""):
+        """Control mode where the height is send as an absolute setpoint (intended
+        to be the distance to the surface under the Crazflie), while giving roll,
+        pitch and yaw rate commands
+
+        roll, pitch are in degrees
+        yawrate is in degrees/s
+        zdistance is in meters"""
+        
+        roll = msg.linear.y
+        pitch = -msg.linear.x
+        yawrate = msg.angular.z
+        zdistance = msg.linear.z
+        self.swarm._cfs[uri].cf.commander.send_zdistance_setpoint(
+            roll, pitch, yawrate, zdistance)
         
     def _cmd_velocity_world_changed(self, msg, uri=""):
         """Sends a streaming velocity-world controller setpoint command.
