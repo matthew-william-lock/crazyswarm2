@@ -42,6 +42,8 @@ from math import degrees, radians, pi, isnan
 
 import rowan
 
+# from crazyswarm.msg import TrajectoryPolynomialPiece, FullState, Position, VelocityWorld
+from crazyflie_interfaces.msg import VelocityWorld
 
 cf_log_to_ros_param = {
     "uint8_t": ParameterType.PARAMETER_INTEGER,
@@ -244,6 +246,10 @@ class CrazyflieServer(Node):
             self.create_subscription(
                 Twist, name +
                 "/cmd_vel_legacy", partial(self._cmd_vel_legacy_changed, uri=uri), 10
+            )
+            self.create_subscription(
+                VelocityWorld, name +
+                '/cmd_velocity_world', partial(self._cmd_velocity_world_changed, uri=uri), 10
             )
             self.create_subscription(
                 Hover, name +
@@ -840,6 +846,35 @@ class CrazyflieServer(Node):
         thrust = int(min(max(msg.linear.z, 0, 0), 65535))
         self.swarm._cfs[uri].cf.commander.send_setpoint(
             roll, pitch, yawrate, thrust)
+        
+    def _cmd_velocity_world_changed(self, msg, uri=""):
+        """Sends a streaming velocity-world controller setpoint command.
+
+        In this mode, the PC specifies desired velocity vector and yaw rate.
+        The onboard controller will try to achive this velocity.
+
+        NOTE: the Mellinger controller is Crazyswarm's default controller, but
+        it has not been tuned (or even tested) for velocity control mode.
+        Switch to the PID controller by changing
+        `firmwareParams.stabilizer.controller` to `1` in your launch file.
+
+        Sending a streaming setpoint of any type will force a change from
+        high-level to low-level command mode. Currently, there is no mechanism
+        to change back, but it is a high-priority feature to implement.
+        This means it is not possible to use e.g. :meth:`land()` or
+        :meth:`goTo()` after a streaming setpoint has been sent.
+
+        Args:
+            vel (array-like of float[3]): Velocity. Meters / second.
+            yawRate (float): Yaw angular velocity. Degrees / second.
+        """
+        
+        # vx, vy, vz, yawrate = msg.vx, msg.vy, msg.vz, msg.yaw_rate
+        vx = msg.vel.x
+        vy = msg.vel.y
+        vz = msg.vel.z
+        yawrate = -1.0*degrees(msg.yaw_rate)
+        self.swarm._cfs[uri].cf.commander.send_velocity_world_setpoint(vx, vy, vz, yawrate)
 
     def _cmd_hover_changed(self, msg, uri=""):
         """
