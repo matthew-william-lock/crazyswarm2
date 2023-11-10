@@ -257,7 +257,7 @@ class CrazyflieServer(Node):
             )
             self.create_subscription(
                 FullState, name +
-                "/cmd_full_state", partial(self._cmd_full_state_changed, name=name), 10
+                "/cmd_full_state", partial(self._cmd_full_state_changed, uri=uri), 10
             )
             qos_profile = QoSProfile(reliability =QoSReliabilityPolicy.BEST_EFFORT,
                 history=QoSHistoryPolicy.KEEP_LAST,
@@ -888,18 +888,24 @@ class CrazyflieServer(Node):
         self.swarm._cfs[uri].cf.commander.send_hover_setpoint(vx, vy, yawrate, z)
         self.get_logger().info(f"{uri}: Received hover topic {vx} {vy} {yawrate} {z}")
         
-    def _cmd_full_state_changed(self, msg, name):
-        q = [msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z]
-        rpy = rowan.to_euler(q)
+    def _cmd_full_state_changed(self, msg, uri):
+        # q = [msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z]
+        # rpy = rowan.to_euler(q)
         
-        crazyflie = self.swarm._cfs[name]
-
-        crazyflie.cmdFullState(
+        crazyflie = self.swarm._cfs[uri].cf.commander
+        crazyflie.send_full_state_setpoint(
             [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z],
             [msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z],
             [msg.acc.x, msg.acc.y, msg.acc.z],
-            rpy[2],
-            [msg.twist.angular.x, msg.twist.angular.y, msg.twist.angular.z])
+            [msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w],
+            msg.twist.angular.x, msg.twist.angular.y, msg.twist.angular.z)
+
+        # crazyflie.send_full_state_setpoint(
+        #     [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z],
+        #     [msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z],
+        #     [msg.acc.x, msg.acc.y, msg.acc.z],
+        #     rpy[2],
+        #     [msg.twist.angular.x, msg.twist.angular.y, msg.twist.angular.z])
 
     def _remove_logging(self, request, response, uri="all"):
         """
