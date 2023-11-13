@@ -220,6 +220,21 @@ class CrazyflieSIL:
         self.cmdHl_vel = copy_svec(self.setpoint.velocity)
         self.cmdHl_yaw = yaw
 
+    def cmdVelZDistance(self, roll, pitch, yawrate, zDistance):
+        self.mode = CrazyflieSIL.MODE_LOW_VELOCITY
+        self.setpoint.attitude.roll     = roll
+        self.setpoint.attitude.pitch    = -pitch
+        self.setpoint.attitudeRate.yaw  = yawrate
+        self.setpoint.position.z        = zDistance
+
+        self.setpoint.mode.x        = firm.modeDisable
+        self.setpoint.mode.y        = firm.modeDisable
+        self.setpoint.mode.z        = firm.modeAbs
+        self.setpoint.mode.roll     = firm.modeAbs
+        self.setpoint.mode.pitch    = firm.modeAbs
+        self.setpoint.mode.yaw      = firm.modeVelocity
+        self.setpoint.mode.quat     = firm.modeDisable
+
     # def cmdPosition(self, pos, yaw = 0):
     #     self.mode = CrazyflieSIL.MODE_LOW_POSITION
     #     self.setState.pos = firm.mkvec(*pos)

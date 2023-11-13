@@ -142,6 +142,12 @@ class CrazyflieServer(Node):
                 10
             )
             self.create_subscription(
+                Twist, 
+                name + '/cmd_vel_z_distance',
+                partial(self._cmd_vel_z_distance_changed, name=name),
+                10
+            )
+            self.create_subscription(
                 Hover,
                 name + '/cmd_hover',
                 partial(self._cmd_hover_changed, name=name),
@@ -325,6 +331,26 @@ class CrazyflieServer(Node):
         # print("cmd_vel_legacy", roll, pitch, yawrate, thrust)
         
         crazyflie.cmdVel(roll, pitch, yawrate, thrust)
+
+    def _cmd_vel_z_distance_changed(self, msg, name=''):
+        """Control mode where the height is send as an absolute setpoint (intended
+        to be the distance to the surface under the Crazflie), while giving roll,
+        pitch and yaw rate commands
+
+        roll, pitch are in degrees
+        yawrate is in degrees/s
+        zdistance is in meters"""
+        # self.get_logger().info("cmd_vel_z_distance not yet implemented")
+        
+        roll = msg.linear.y
+        pitch = msg.linear.x 
+        yawrate = msg.angular.z
+        zdistance = msg.linear.z
+
+        crazyflie = self.cfs[name]
+        assert isinstance(crazyflie, CrazyflieSIL)
+
+        crazyflie.cmdVelZDistance(roll, pitch, yawrate, zdistance)
 
     def _cmd_hover_changed(self, msg, name=''):
         """
